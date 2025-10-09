@@ -36,6 +36,8 @@ import org.springframework.web.servlet.ModelAndView;
  * @see org.springframework.web.HttpRequestHandler
  * @see SimpleControllerHandlerAdapter
  */
+// supports判断handler对象是不是一个HttpRequestHandler对象,
+// 最终对请求进行处理的方法handle为HttpRequestHandler对象的处理方法handlerRequest
 public class HttpRequestHandlerAdapter implements HandlerAdapter {
 
 	@Override

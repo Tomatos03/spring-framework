@@ -37,6 +37,7 @@ import org.springframework.util.CollectionUtils;
  * @since 20.06.2003
  * @see HandlerInterceptor
  */
+// 当前对象包装了拦截器和处理器(Controller类)
 public class HandlerExecutionChain {
 
 	private static final Log logger = LogFactory.getLog(HandlerExecutionChain.class);
@@ -134,6 +135,18 @@ public class HandlerExecutionChain {
 
 
 	/**
+	 * Apply postHandle methods of registered interceptors.
+	 */
+	void applyPostHandle(HttpServletRequest request, HttpServletResponse response, @Nullable ModelAndView mv)
+			throws Exception {
+
+		for (int i = this.interceptorList.size() - 1; i >= 0; i--) {
+			HandlerInterceptor interceptor = this.interceptorList.get(i);
+			interceptor.postHandle(request, response, this.handler, mv);
+		}
+	}
+
+	/**
 	 * Apply preHandle methods of registered interceptors.
 	 * @return {@code true} if the execution chain should proceed with the
 	 * next interceptor or the handler itself. Else, DispatcherServlet assumes
@@ -152,22 +165,11 @@ public class HandlerExecutionChain {
 	}
 
 	/**
-	 * Apply postHandle methods of registered interceptors.
-	 */
-	void applyPostHandle(HttpServletRequest request, HttpServletResponse response, @Nullable ModelAndView mv)
-			throws Exception {
-
-		for (int i = this.interceptorList.size() - 1; i >= 0; i--) {
-			HandlerInterceptor interceptor = this.interceptorList.get(i);
-			interceptor.postHandle(request, response, this.handler, mv);
-		}
-	}
-
-	/**
 	 * Trigger afterCompletion callbacks on the mapped HandlerInterceptors.
 	 * Will just invoke afterCompletion for all interceptors whose preHandle invocation
 	 * has successfully completed and returned true.
 	 */
+	// 执行拦截器的afterCompletion方法
 	void triggerAfterCompletion(HttpServletRequest request, HttpServletResponse response, @Nullable Exception ex) {
 		for (int i = this.interceptorIndex; i >= 0; i--) {
 			HandlerInterceptor interceptor = this.interceptorList.get(i);

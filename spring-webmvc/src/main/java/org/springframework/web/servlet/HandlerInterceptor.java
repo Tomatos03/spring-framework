@@ -151,6 +151,8 @@ public interface HandlerInterceptor {
 	 * include exceptions that have been handled through an exception resolver
 	 * @throws Exception in case of errors
 	 */
+	// 这个方法仅在请求没有通过所有拦截器的preHandle方法时执行
+	// 当请求没有通过所有的拦截器的时候, 会执行所有请求已经通过的拦截器的afterCompletion方法
 	default void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
 			@Nullable Exception ex) throws Exception {
 	}

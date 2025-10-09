@@ -932,6 +932,14 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @param response current HTTP response
 	 * @throws Exception in case of any kind of processing failure
 	 */
+	/**
+	 * 请求经过时的执行流程如下:
+	 * 请求到达doDispatch方法 -> 尝试获取请求对应的处理器(Controller类), 找不到的时候抛出异常
+	 * -> 执行所有注册的拦截器的preHandler方法, 如果请求没有通过所有的拦截器preHandler(即请求经过某个拦截器的preHandler方法返回是false),
+	 * 就执行请求已经通过的拦截器的afterCompletion方法, 结束整个流程 -> 获取处理器Handler对应的适配器类HandlerAdapter -> 对请求进行处理 ->
+	 * 执行拦截器的后置处理方法postHandler -> 对处理器处理的结果进行进一步处理
+	 *
+	 */
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
@@ -950,23 +958,31 @@ public class DispatcherServlet extends FrameworkServlet {
 				// Determine handler for the current request.
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
+					// 请求没有与之对应的Controller, 抛出异常NoHandlerFoundException
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
+				// 执行所有已注册拦截器的preHandle方法
+				// 如果请求没有通过所有的拦截器拦截方法preHandle, 那么将会执行已经通过的拦截器的afterCompleted方法
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
 
+				// 下面两行代码: 确定handler(Object) 对象的适配器对象, 然后执行handler方法处理请求
 				// Determine handler adapter and invoke the handler.
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+				// ModelAndView mv
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
 
+				// 设置默认视图名称
 				applyDefaultViewName(processedRequest, mv);
+				// 执行所有已注册拦截器的postHandle方法
+				// postHandle方法执行的顺序与preHandle方法执行的顺序相反
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			}
 			catch (Exception ex) {
@@ -977,6 +993,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new ServletException("Handler dispatch failed: " + err, err);
 			}
+			// 处理最终返回的结果
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
 		catch (Exception ex) {
